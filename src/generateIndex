@@ -1,0 +1,33 @@
+file="kriss_link.php"
+n=$(\grep "function __autoload" ${file} -n | cut -d ":" -f 1)
+nt=$(cat ${file} | wc -l)
+
+function removeComments {
+ sed -e '/\/\*\*/,/*\//d;'
+}
+
+function includeFile {
+ perl -e '
+  while(<>){
+   $line = $_;
+   if ($line =~ m/<\?php include/) {
+    $line =~ /.*include\("(.*)"\).*/;
+    open FILE, "class/".$1;
+    print <FILE>;
+    close FILE;
+   } else {
+    print $_;
+   }
+  }
+ '
+}
+
+head -n $((${n} - 1)) ${file} | removeComments
+
+for i in class/*.php
+do
+ echo -n "del>"
+ cat $i | includeFile
+done | sed -e 's:del><?php::g' | removeComments
+
+tail -n $(( ${nt} - $((${n} + 3)) )) ${file} | removeComments
