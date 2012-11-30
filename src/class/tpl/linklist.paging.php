@@ -4,13 +4,10 @@
     <div id="paging_privatelinks">
         <a href="?privateonly">
 		<?php if( $privateonly ){ ?>
-
-		<img src="images/private_16x16_active.png" width="16" height="16" title="Click to see all links" alt="Click to see all links">
+		Click to see all links
 		<?php }else{ ?>
-
-		<img src="images/private_16x16.png" width="16" height="16" title="Click to see only private links" alt="Click to see only private links">
+		Click to see only private links
 		<?php } ?>
-
 		</a>
     </div>
 <?php } ?>

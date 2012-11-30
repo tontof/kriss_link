@@ -2,7 +2,6 @@
 <html>
 <head><?php LinkPage::includesTpl(); ?>
 
-<script src="inc/jquery.lazyload.min.js"></script>
 </head>
 <body>
 <div id="pageheader"><?php LinkPage::pageheaderTpl(); ?></div>
@@ -20,9 +19,4 @@
 <?php LinkPage::pagefooterTpl(); ?>
 
 </body>
-<script>
-$(document).ready(function() {
-    $("img.lazyimage").show().lazyload();
-});
-</script>
 </html>

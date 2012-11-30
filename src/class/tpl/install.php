@@ -4,8 +4,8 @@
 <?php echo $timezone_js;?></head>
 <body onload="document.installform.setlogin.focus();">
 <div style="margin-left:20px;">
-<h1>Shaarli</h1>	
-It looks like it's the first time you run Shaarli. Please configure it:<br>
+      <h1>KrISS link : a simple and smart (or stupid) <a href="http://sebsauvage.net/wiki/doku.php?id=php:shaarli">shaarli</a></h1>	
+It looks like it's the first time you run KrISS link. Please configure it:<br>
 <div style="color:white !important;">
 <form method="POST" action="" name="installform" id="installform" style="border:1px solid black; padding:10 10 10 10;">
 <table border="0" cellpadding="20">

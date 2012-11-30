@@ -28,13 +28,13 @@ class pageBuilder
         elseif (!empty($_GET['searchterm'])) $searchcrits.='&searchterm='.urlencode($_GET['searchterm']);
         $this->assign('searchcrits',$searchcrits);
         $this->assign('source',indexUrl());
-        $this->assign('version',shaarli_version);
+        $this->assign('version',LINK_VERSION);
         $this->assign('scripturl',indexUrl());
-        $this->assign('pagetitle','Shaarli');
+        $this->assign('pagetitle','KrISS link');
         $this->assign('privateonly',!empty($_SESSION['privateonly'])); // Show only private links ?
         if (!empty($GLOBALS['title'])) $this->assign('pagetitle',$GLOBALS['title']);
         if (!empty($GLOBALS['pagetitle'])) $this->assign('pagetitle',$GLOBALS['pagetitle']);
-        $this->assign('shaarlititle',empty($GLOBALS['title']) ? 'Shaarli': $GLOBALS['title'] );
+        $this->assign('shaarlititle',empty($GLOBALS['title']) ? 'KrISS link': $GLOBALS['title'] );
         return;    
     }
     

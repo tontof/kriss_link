@@ -1,5 +1,8 @@
 <?php
-// Shaarli 0.0.40 beta - Shaare your links...
+// KrISS link. A simple and smart (or stupid) shaarli - by Tontof - http://tontof.net
+// use KrISS link at your own risk
+
+// based on Shaarli 0.0.40 beta - Shaare your links...
 // The personal, minimalist, super-fast, no-database delicious clone. By sebsauvage.net
 // http://sebsauvage.net/wiki/doku.php?id=php:shaarli
 // Licence: http://www.opensource.org/licenses/zlib-license.php
@@ -20,6 +23,7 @@ $GLOBALS['config']['CACHEDIR'] = 'cache'; // Cache directory for thumbnails for 
 $GLOBALS['config']['PAGECACHE'] = 'pagecache'; // Page cache directory.
 $GLOBALS['config']['ENABLE_LOCALCACHE'] = true; // Enable Shaarli to store thumbnail in a local cache. Disable to reduce webspace usage.
 $GLOBALS['config']['PUBSUBHUB_URL'] = ''; // PubSubHubbub support. Put an empty string to disable, or put your hub url here to enable.
+$GLOBALS['config']['UPDATECHECK_ENABLE'] = false ; // If true, check for new version
 $GLOBALS['config']['UPDATECHECK_FILENAME'] = $GLOBALS['config']['DATADIR'].'/lastupdatecheck.txt'; // For updates check of Shaarli.
 $GLOBALS['config']['UPDATECHECK_INTERVAL'] = 86400 ; // Updates check frequency for Shaarli. 86400 seconds=24 hours
                                           // Note: You must have publisher.php in the same directory as Shaarli index.php
@@ -28,7 +32,7 @@ $GLOBALS['config']['UPDATECHECK_INTERVAL'] = 86400 ; // Updates check frequency 
 // Optionnal config file.
 if (is_file($GLOBALS['config']['DATADIR'].'/options.php')) require($GLOBALS['config']['DATADIR'].'/options.php');
 
-define('shaarli_version','0.0.40 beta');
+define('LINK_VERSION','1');
 define('PHPPREFIX','<?php /* '); // Prefix to encapsulate data in php code.
 define('PHPSUFFIX',' */ ?>'); // Suffix to encapsulate data in php code.
 
@@ -122,6 +126,8 @@ class linkdb implements Iterator, Countable, ArrayAccess
              $link = array('title'=>'Shaarli - sebsauvage.net','url'=>'http://sebsauvage.net/wiki/doku.php?id=php:shaarli','description'=>'Welcome to Shaarli ! This is a bookmark. To edit or delete me, you must first login.','private'=>0,'linkdate'=>'20110914_190000','tags'=>'opensource software');
              $this->links[$link['linkdate']] = $link;
              $link = array('title'=>'My secret stuff... - Pastebin.com','url'=>'http://pastebin.com/smCEEeSn','description'=>'SShhhh!!  I\'m a private link only YOU can see. You can delete me too.','private'=>1,'linkdate'=>'20110914_074522','tags'=>'secretstuff');
+             $this->links[$link['linkdate']] = $link;
+             $link = array('title'=>'KrISS link','url'=>'https://github.com/tontof/kriss_link','description'=>'Welcome to KrISS link, a simple and smart (or stupid) shaarli.','private'=>0,'linkdate'=>'20121130_190000','tags'=>'opensource software');
              $this->links[$link['linkdate']] = $link;
              file_put_contents($GLOBALS['config']['DATASTORE'], PHPPREFIX.base64_encode(gzdeflate(serialize($this->links))).PHPSUFFIX); // Write database to disk
         }
@@ -388,9 +394,9 @@ class LinkPage
 	  <?php if( $nextday ){ ?><a href="?do=daily&day=<?php echo $nextday;?>">Next day<b>&gt;</b></a><?php }else{ ?>Next day<b>&gt;</b><?php } ?>
 
       <br><br>
-	  <a href="?do=dailyrss" title="1 RSS entry per day"><img src="images/feed-icon-14x14.png" width="14" height="14" style="position:relative;top:3px; margin-right:4px;">Daily RSS Feed</a>
+	  <a href="?do=dailyrss" title="1 RSS entry per day">Daily RSS Feed</a>
     </div>
-    <div class="dailyTitle"><img src="tpl/../images/floral_left.png" width="51" height="50" class="nomobile"> The Daily Shaarli <img src="tpl/../images/floral_right.png" width="51" height="50" class="nomobile"></div>
+    <div class="dailyTitle">The Daily Shaarli</div>
     <div class="dailyDate"><span class="nomobile">&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;</span> <?php echo $day;?> <span class="nomobile">&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;&#x0097;</span></div>
     <div style="clear:both;"></div>
     
@@ -400,7 +406,7 @@ class LinkPage
         <?php $counter1=-1; if( isset($col1) && is_array($col1) && sizeof($col1) ) foreach( $col1 as $key1 => $value1 ){ $counter1++; ?>
 
         <div class="dailyEntry">
-            <div style="float:right;position:relative;top:-1px;"><a href="?<?php echo smallHash( $value1["linkdate"] );?>"><img src="tpl/../images/squiggle2.png" width="25" height="26" title="permalink" alt="permalink"></a></div>
+            <div style="float:right;position:relative;top:-1px;"><a href="?<?php echo smallHash( $value1["linkdate"] );?>">permalink</div>
             <?php if( $value1["tags"] ){ ?><div class="dailyEntryTags"><?php $counter2=-1; if( isset($value1["taglist"]) && is_array($value1["taglist"]) && sizeof($value1["taglist"]) ) foreach( $value1["taglist"] as $key2 => $value2 ){ $counter2++; ?>
 <?php echo htmlspecialchars( $value2 );?> - <?php } ?></div><?php } ?>
 
@@ -417,7 +423,7 @@ class LinkPage
         <?php $counter1=-1; if( isset($col2) && is_array($col2) && sizeof($col2) ) foreach( $col2 as $key1 => $value1 ){ $counter1++; ?>
 
         <div class="dailyEntry">
-            <div style="float:right;position:relative;top:-1px;"><a href="?<?php echo smallHash( $value1["linkdate"] );?>"><img src="tpl/../images/squiggle2.png" width="25" height="26" title="permalink" alt="permalink"></a></div>
+            <div style="float:right;position:relative;top:-1px;"><a href="?<?php echo smallHash( $value1["linkdate"] );?>">permalink</div>
             <?php if( $value1["tags"] ){ ?><div class="dailyEntryTags"><?php $counter2=-1; if( isset($value1["taglist"]) && is_array($value1["taglist"]) && sizeof($value1["taglist"]) ) foreach( $value1["taglist"] as $key2 => $value2 ){ $counter2++; ?>
 <?php echo htmlspecialchars( $value2 );?> - <?php } ?></div><?php } ?>
 
@@ -434,7 +440,7 @@ class LinkPage
         <?php $counter1=-1; if( isset($col3) && is_array($col3) && sizeof($col3) ) foreach( $col3 as $key1 => $value1 ){ $counter1++; ?>
 
         <div class="dailyEntry">
-            <div style="float:right;position:relative;top:-1px;"><a href="?<?php echo smallHash( $value1["linkdate"] );?>"><img src="tpl/../images/squiggle2.png" width="25" height="26" title="permalink" alt="permalink"></a></div>
+            <div style="float:right;position:relative;top:-1px;"><a href="?<?php echo smallHash( $value1["linkdate"] );?>">permalink</div>
             <?php if( $value1["tags"] ){ ?><div class="dailyEntryTags"><?php $counter2=-1; if( isset($value1["taglist"]) && is_array($value1["taglist"]) && sizeof($value1["taglist"]) ) foreach( $value1["taglist"] as $key2 => $value2 ){ $counter2++; ?>
 <?php echo htmlspecialchars( $value2 );?> - <?php } ?></div><?php } ?>
 
@@ -452,7 +458,7 @@ class LinkPage
     <?php } ?>
 
     <div style="clear:both;"></div>
-    <div style="text-align:center; padding-bottom:20px;"><img src="tpl/../images/squiggle_closing.png" width="66" height="61" alt="-"></div>
+    <div style="text-align:center; padding-bottom:20px;">-</div>
 </div>
 <?php LinkPage::pagefooterTpl(); ?>
 
@@ -585,10 +591,472 @@ class LinkPage
 <link rel="alternate" type="application/rss+xml" href="<?php echo $feedurl;?>?do=rss<?php echo $searchcrits;?>" title="RSS Feed" />
 <link rel="alternate" type="application/atom+xml" href="<?php echo $feedurl;?>?do=atom<?php echo $searchcrits;?>" title="ATOM Feed" />
 <link href="images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-<link type="text/css" rel="stylesheet" href="inc/shaarli.css?version=<?php echo urlencode( $version );?>" />
-<?php if( is_file('inc/user.css') ){ ?><link type="text/css" rel="stylesheet" href="inc/user.css?version=<?php echo $version;?>" /><?php } ?>
+<?php if( is_file('inc/shaarli.css') ){ ?>
+<link type="text/css" rel="stylesheet" href="inc/shaarli.css?version=<?php echo $version;?>" />
+<?php } else { ?>
+  <?php if( is_file('inc/style.css') ){ ?>
+  <link type="text/css" rel="stylesheet" href="inc/style.css?version=<?php echo $version;?>" />
+  <?php } else { ?>
+  <style>
+/* CSS Stylsheet for KrISS link - http://github.com/tontof/kriss_link */
+/* based on CSS Stylsheet for Shaarli - http://sebsauvage.net/wiki/doku.php?id=php:shaarli */
+/* CSS Reset from Yahoo to cope with browsers CSS inconsistencies. */
+/*
+Copyright (c) 2010, Yahoo! Inc. All rights reserved. Code licensed under the BSD License: http://developer.yahoo.com/yui/license.html
+version: 2.8.2r1
+*/
+html{color:#000;background:#FFF;}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,button,textarea,p,blockquote,th,td{margin:0;padding:0;}table{border-collapse:collapse;border-spacing:0;}fieldset,img{border:0;}address,caption,cite,code,dfn,em,strong,th,var,optgroup{font-style:inherit;font-weight:inherit;}del,ins{text-decoration:none;}li{list-style:none;}caption,th{text-align:left;}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal;}q:before,q:after{content:'';}abbr,acronym{border:0;font-variant:normal;}sup{vertical-align:baseline;}sub{vertical-align:baseline;}legend{color:#000;}input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;}input,button,textarea,select{*font-size:100%;}
 
-<script src="inc/jquery.min.js"></script><script src="inc/jquery-ui.min.js"></script>
+body { font-family: "Trebuchet MS",Verdana,Arial,Helvetica,sans-serif; font-size:10pt; background-color: #ffffff; }
+input, textarea {
+	background-color: #dedede;
+	background: linear-gradient(#dedede, #ffffff);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+	padding:5px;
+	border-radius: 5px 5px 5px 5px;
+	border: none;
+	color:#000;
+
+	}
+
+h1 { font-size:20pt; font-weight:bold; font-style:italic; margin-bottom:20px; }
+/* I don't give a shit about IE. He can't understand selectors such as input[type='submit']. */
+
+/* Buttons */
+.bigbutton {
+    background-color: #c0c0c0;
+	background: linear-gradient(#c0c0c0, #ffffff);
+    border-radius: 3px 3px 3px 3px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    height: 24px;
+    margin-left: 5px;
+    padding: 0 5px;
+	color: #606060;
+	border-style:outset;
+	border-width:1px;
+
+	}
+.smallbutton {
+    background-color: #c0c0c0;
+	background: linear-gradient(#c0c0c0, #ffffff);
+    border-radius: 3px 3px 3px 3px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    height: 20px;
+    margin-left: 5px;
+    padding: 0 5px;
+	color: #606060;
+	border-style:outset;
+	border-width:1px;
+
+	}
+
+/* Edit/Delete buttons on links */
+.button_edit, .button_delete { border-radius:0; box-shadow:none; border-style:none; border-width:0; padding:0; background:none; }
+.button_edit { margin-left:10px; }
+
+
+#pageheader #logo{
+float:left;
+margin:0 10px 0 10px;
+width:105px;
+height:55px;
+cursor:pointer;
+
+}
+
+#pageheader
+{
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+	width:auto;
+	padding:0 10px 5px 10px;
+	margin: auto; 
+}
+
+#pageheader a
+{
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+	padding:5px;
+	border-radius: 5px 5px 5px 5px;
+	margin:10px 3px 3px 3px;
+	color:#666;
+	float:left;
+	text-decoration:none;
+}
+
+#toolsdiv a{
+	clear:both;
+}
+#toolsdiv a span{
+	color:#666;
+}
+.linksperpage,.tagfilter,.searchform,.addform {
+	background-color: #dedede;
+	background: linear-gradient(#dedede, #ffffff);
+	display:inline;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+	padding:5px;
+	border: none;
+	border-radius: 5px 5px 5px 5px;
+	margin:10px 3px 3px 3px;
+	color:#cecece;
+}
+
+.linksperpage{
+	box-shadow: 0 0 0 rgba(0, 0, 0, 0.5);
+	padding:3px;
+}
+
+.linksperpage input,.tagfilter input, .searchform input, .addform input{
+	border:none;
+	color:#606060;
+	background:none;
+	box-shadow:none;
+	padding:5px;
+}
+
+.linksperpage input{
+	padding:0;
+}
+
+.tagfilter input.bigbutton,.searchform input.bigbutton,.addform input.bigbutton{
+    background-color: #dedede;
+	background: linear-gradient(#dedede, #ffffff);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+	padding:0 5px 0 5px;
+	margin:5px 0 5px 0;
+	height:20px;
+	border-radius: 5px 5px 5px 5px;
+	cursor:pointer;
+}
+
+#shaarli_title { font-weight:bold; font-style:italic; margin-top:0;}
+#shaarli_title a { color: #666 !important; }
+
+#pageheader a:visited { color:#98C943; text-decoration:none;}
+#pageheader a:hover { color:#666; text-decoration:none;}
+#pageheader a:active { color:#bbb; text-decoration:none;}
+#searchcriteria { padding: 4px 0px 5px 5px; font-weight:bold;}
+.paging { padding:5px;background-color:#777; color:#000; text-align:center;  clear:both;}
+.paging a:link { color:#000; text-decoration:none;}
+.paging a:visited { color:#000;  }
+.paging a:hover {  color:#666;  }
+.paging a:active { color:#666;  }
+#paging_privatelinks { float:left; }
+#paging_linksperpage { float:right; padding-right:5px; }
+#paging_current { display:inline; color:#000; padding:0 20 0 20; }
+#paging_older { margin-right:15px; }
+#paging_newer { margin-left:15px; }
+
+#headerform { color:#666; padding:5px 5px 5px 5px; clear: both;}
+#toolsdiv { color:#666; padding:5px 5px 5px 5px; clear:left; }
+#uploaddiv { color:#666; padding:5px 5px 5px 5px; clear:left; }
+#editlinkform { height:100%;color:#666; padding:5px 5px 5px 15px; width:80%; clear:left; }
+#linklist li {
+	padding:4px 10px 15px 20px; border-top: 1px solid #bbb; clear:both;
+    background-color: #F2F2F2;
+	background: linear-gradient(#F2F2F2, #ffffff);
+}
+
+/*
+#linklist li.publicLinkHightLight:hover,#linklist li:hover{
+	background: #E9FFCE;
+}
+*/
+#linklist li.private { padding-left:60px; }
+.private  .linktitle a {color:#969696;}
+.linktitle { font-size:14pt; font-weight:bold; }
+.linktitle a { text-decoration: none; color:#80AD48; }
+.linktitle a:hover { color:#F57900; }
+.linkdate { font-size:8pt; color:#888; }
+.linkdate a { padding:2px 0 3px 20px;background-repeat:no-repeat;text-decoration: none; color:#E28E3F;  }
+.linkdate a:hover { color: #F57900 }
+.linkurl { font-size:8pt; color:#4BAA74; }
+.linkdescription { color:#000; margin-top:0; margin-bottom:12px; font-weight:normal; max-height:400px; overflow:auto; }
+.linkdescription a { text-decoration: none; color:#3465A4; }
+.linkdescription a:hover { color:#F57900; }
+.linktaglist { padding-top:10px;}
+.linktag {
+
+font-size:9pt;
+    background-color: #F2F2F2;
+	background: linear-gradient(#F2F2F2, #ffffff);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+	padding:3px 3px 3px 20px;
+	height:20px;
+	border-radius: 3px 3px 3px 3px;
+	cursor:pointer;
+	background-color:#ffffff;
+}
+.linktag:hover { border-color: #555573; color:#000; }
+.linktag a { color:#777; text-decoration:none; }
+.linkshort { font-size:8pt; color:#888; }
+.linkshort a { text-decoration: none; color:#393964; }
+.linkshort a:hover { text-decoration: underline; }
+.buttoneditform { display:inline; }
+#footer { font-size:8pt; text-align:center; border-top:1px solid #ddd; clear:both; }
+#footer  a{ color:#666;}
+#footer  a:hover{ color:#000000;}
+#newversion { background-color: #FFFFA0; color:#000; position:absolute; top:0;right:0; padding:2 7 2 7;  font-size:9pt;}
+#cloudtag  { padding-left:10%; padding-right:10%; }
+#cloudtag a { color:black; text-decoration:none; }
+#installform td  { font-size: 10pt; color:black; padding:10px 5px 10px 5px; clear:left; }
+#changepasswordform { color:#000; padding:10px 5px 10px 5px; clear:left; }
+#changetag { color:#000; padding:10px 5px 10px 5px; clear:left; }
+#configform td  { color:#000; font-size: 10pt; padding:10px 5px 10px 5px;  }
+#configform  { color:#000; padding:10px 5px 10px 5px; clear:left; }
+.thumbnail { float:right;  margin-left: 10px; }
+/* If you want thumbnails on the left:
+.thumbnail { float:left;  margin-right: 10px;   }
+.linkcontainer { position: static; margin-left:130px; }
+*/
+
+
+
+
+/* --- Picture wall CSS --- */
+#picwall_container { color:#666; background-color:#000; clear:both; }
+.picwall_pictureframe { background-color:#000; z-index:5; position:relative; display:table-cell; vertical-align:middle;width:90px; height:90px; overflow:hidden; text-align:center;  float:left; }
+.picwall_pictureframe img { max-width: 100%;height: auto; } /* Adapt the width of the image */
+.picwall_pictureframe a {text-decoration:none;}
+
+/* CSS to show title when hovering an image - no javascript required. */
+.picwall_pictureframe span.info {display: none;}
+.picwall_pictureframe:hover span.info {
+    display:block;
+    position:absolute;
+    top:0; left:0; width:90px;
+    font-weight:bold;
+    font-size:8pt;
+    color:#666;
+    text-align: left;
+  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.4);  /* FF3+, Saf3+, Opera 10.10+, Chrome, IE9 */
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#66000000,endColorstr=#66000000); /* IE6IE9 */
+text-shadow:2px 2px 1px #000000;    
+}
+
+/* Minimal customisation for jQuery widgets */
+.ui-autocomplete { background-color:#fff; padding-left:5px;}
+.ui-state-hover { background-color: #604dff; color:#666; }
+
+#linklist li.publicLinkHightLight{
+	background: #ffffff;
+}
+
+div.qrcode {
+width:220px;
+height:220px;
+background-color: #ffffff;
+border: 1px solid black;
+position: absolute;
+top:-100px;
+left:-100px;
+text-align:center;
+font-size: 8pt;
+z-index:50;
+box-shadow:2px 2px 20px 2px #333333;
+}
+
+div.daily
+{
+    font-family: Georgia, 'DejaVu Serif', Norasi, serif; 
+    background-color: #E6D6BE;
+    position:relative;
+    border-bottom: 2px solid black;
+}
+
+#daily_col1 { float:left;position:relative; width:33%; padding-left:1%; }
+#daily_col2 { float:left;position:relative; width:33%; }
+#daily_col3 { float:left;position:relative; width:33%;}
+
+div.dailyAbout
+{ 
+    float:left;
+    border: 1px solid black;
+    font-size: 8pt;
+    position:absolute;
+    left:10px;
+    top: 15px;
+    padding: 5px 5px 5px 5px;
+    text-align:center; 
+}
+div.dailyAbout  a { color: #890500; }
+div.dailyTitle
+ { 
+     font-weight: bold;
+     font-size: 44pt;
+     text-align:center; 
+     padding:10px 20px 0px 20px;
+}
+div.dailyDate
+ { 
+     font-size: 12pt;
+     font-weight:bold; 
+     text-align:center; 
+     padding:0px 20px 30px 20px;
+}
+
+/* Individual entries in "Daily": */
+div.dailyEntry
+{
+    margin: 5px 10px 2px 5px;
+    font-size: 11pt;
+    border-top: 1px solid #555;
+}
+div.dailyEntry  a { text-decoration:none; color: #890500; }
+div.dailyEntryTags { font-size:7.75pt;  }
+div.dailyEntryTitle { font-size:18pt; font-weight:bold;}
+div.dailyEntryThumbnail 
+{ 
+    width:100%; 
+    text-align:center; 
+    background-color:rgb(128,128,128); 
+    padding:4px 0px 2px 0px;
+}
+div.dailyEntryDescription
+{ 
+    margin-top: 10px;
+    margin-bottom: 30px; 
+    text-align:justify; 
+    overflow:auto;
+}
+
+/* Common css screwdriver */
+.clear{
+	clear:both;
+}
+
+/* For lazy images loading in picture wall.
+   using http://www.appelsiini.net/projects/lazyload 
+ */
+.lazyimage { display:none; }
+
+@media print {
+html {border:none;background:#fff!important;color:#000!important;}
+body {font-size:12pt;width:auto!important;margin:auto!important;}
+p {orphans:3; /*pas de ligne seule en bas */widows:3;/*pas de ligne seule en haut*/}
+a {color:#000!important;text-decoration:none!important;}
+#pageheader, .paging, #linklist li form, #footer {display:none;}
+#linklist li { padding:2 0 10 0; border-top: 2px solid #000; clear:both; }
+#linklist li.private { background-color: none; border-left:0; }
+.linkdate { line-height:2; }
+.linkurl { color:#000; }
+.linkdescription { font-size:10pt;}
+.linktag { border: 1px solid black; font-style:italic;  font-size:8pt;}
+
+}
+
+
+@media handheld, only screen and (max-width: 480px), only screen and (max-device-width: 854px)
+{
+/* A few fixes for mobile devices (far from perfect). */
+.nomobile  { display:none; }
+#logo { display:none; }
+#pageheader a
+{
+	padding:5px;
+	border-radius: 5px 5px 5px 5px;
+	margin:3px;
+}
+.searchform,.tagfilter  { display:block !important; margin:0px !important; padding:0px !important; width:100% !important; }
+.searchform input,.tagfilter input  { margin:0px !important; padding:0px !important; display:inline !important; }
+.tagfilter input.bigbutton,.searchform input.bigbutton,.addform input.bigbutton{  width:30%; font-size:smaller;}
+#searchform_value { width:70% !important; }
+#tagfilter_value { width:70% !important; }
+div.qrcode { position:relative; float:left; top:-10px; left:0px; }
+#paging_privatelinks { float;none; }
+#paging_linksperpage { float:none; margin-bottom:10px; font-size:smaller;}
+#paging_older,#paging_newer,#paging_linksperpage a { border: 1px solid black; padding:3px 5px 3px 5px; background-color:#666; color:#666; border-radius: 5px 5px 5px 5px;}
+.thumbnail { float:none; height:auto; margin: 0px; text-align:center;}
+#cloudtag  { padding:0px; }
+div.dailyAbout {  float:none; position:relative; width:100%; clear:both; padding:0px; top:0px; left:0px; }
+#daily_col1,#daily_col2,#daily_col3 { float:none; width:100%; padding:0px;}
+div.dailyTitle  { font-size: 18pt; margin-top:5px; padding:0px;}
+div.dailyDate  {  font-size: 11pt;padding:0px; display:block; }
+div.dailyEntryTitle { font-size:16pt; font-weight:bold;}
+div.dailyEntryDescription { font-size:10pt; }
+
+} 
+
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eee;
+  color: #000;
+}
+
+fieldset{
+  padding: 1em;
+}
+
+legend {
+  font-weight: bold;
+  margin: 0 .42em;
+  padding: 0 .42em;
+}
+
+input[type=text], input[type=password], textarea{
+  border: 1px solid #000;
+  margin: .2em 0;
+  padding: .2em;
+  font-size: 1em;
+  width: 100%;
+}
+
+button{
+  font-size: 1.1em;
+}
+
+a:active, a:visited, a:link {
+  text-decoration: underline;
+  color: #666;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+ul, ol {
+  margin-left: 1em;
+  margin-bottom: .2em;
+  padding-left: 0;
+}
+
+li {
+  margin-bottom: .2em;
+}
+
+@media (max-width: 800px) {
+body{
+  width: 100%;
+  height: 100%;
+}
+
+img, video, iframe, object{
+  max-width: 100%;
+  height: auto;
+}
+
+.nomobile{
+  display: none !important;
+}
+}
+  </style>
+  <?php } ?>
+<?php } ?>
+<?php if( is_file('inc/user.css') ){ ?>
+<link type="text/css" rel="stylesheet" href="inc/user.css?version=<?php echo $version;?>" />
+<?php } ?>
 <?php
  }
 
@@ -602,8 +1070,8 @@ class LinkPage
 <?php echo $timezone_js;?></head>
 <body onload="document.installform.setlogin.focus();">
 <div style="margin-left:20px;">
-<h1>Shaarli</h1>	
-It looks like it's the first time you run Shaarli. Please configure it:<br>
+      <h1>KrISS link : a simple and smart (or stupid) <a href="http://sebsauvage.net/wiki/doku.php?id=php:shaarli">shaarli</a></h1>	
+It looks like it's the first time you run KrISS link. Please configure it:<br>
 <div style="color:white !important;">
 <form method="POST" action="" name="installform" id="installform" style="border:1px solid black; padding:10 10 10 10;">
 <table border="0" cellpadding="20">
@@ -632,13 +1100,10 @@ It looks like it's the first time you run Shaarli. Please configure it:<br>
     <div id="paging_privatelinks">
         <a href="?privateonly">
 		<?php if( $privateonly ){ ?>
-
-		<img src="images/private_16x16_active.png" width="16" height="16" title="Click to see all links" alt="Click to see all links">
+		Click to see all links
 		<?php }else{ ?>
-
-		<img src="images/private_16x16.png" width="16" height="16" title="Click to see only private links" alt="Click to see only private links">
+		Click to see only private links
 		<?php } ?>
-
 		</a>
     </div>
 <?php } ?>
@@ -708,9 +1173,9 @@ It looks like it's the first time you run Shaarli. Please configure it:<br>
 <?php echo $value1["url"];?>"><?php echo htmlspecialchars( $value1["title"] );?></a></span>
                 <?php if( isLoggedIn() ){ ?>
 
-                    <form method="GET" class="buttoneditform"><input type="hidden" name="edit_link" value="<?php echo $value1["linkdate"];?>"><input type="image" alt="Edit" src="images/edit_icon.png" title="Edit" class="button_edit"></form>
+                    <form method="GET" class="buttoneditform"><input type="hidden" name="edit_link" value="<?php echo $value1["linkdate"];?>"><input type="submit" value="Edit" class="button_edit"></form>
                     <form method="POST" class="buttoneditform"><input type="hidden" name="lf_linkdate" value="<?php echo $value1["linkdate"];?>">
-                    <input type="hidden" name="token" value="<?php echo $token;?>"><input type="hidden" name="delete_link"><input type="image" alt="Delete" src="images/delete_icon.png" title="Delete" class="button_delete" onClick="return confirmDeleteLink();"></form>
+                    <input type="hidden" name="token" value="<?php echo $token;?>"><input type="hidden" name="delete_link"><input type="submit" value="Delete" class="button_delete" onClick="return confirmDeleteLink();"></form>
                 <?php } ?>
 
                 <br>
@@ -724,7 +1189,7 @@ It looks like it's the first time you run Shaarli. Please configure it:<br>
                     <span class="linkdate" title="Short link here"><a href="?<?php echo smallHash( $value1["linkdate"] );?>">permalink</a> - </span>
                 <?php } ?>
 
-                <div style="position:relative;display:inline;"><a href="http://invx.com/code/qrcode/?code=<?php echo urlencode( $scripturl );?>%3F<?php echo smallHash( $value1["linkdate"] );?>&width=200&height=200" onclick="return false;" class="qrcode"><img src="images/qrcode.png" width="13" height="13" title="QR-Code"></a></div> - 
+                <div style="position:relative;display:inline;"><a href="http://invx.com/code/qrcode/?code=<?php echo urlencode( $scripturl );?>%3F<?php echo smallHash( $value1["linkdate"] );?>&width=200&height=200" class="qrcode" title="QR-Code">qrcode</a></div> - 
                 <span class="linkurl" title="Short link"><?php echo htmlspecialchars( $value1["url"] );?></span><br>
                 <?php if( $value1["tags"] ){ ?>
 
@@ -747,16 +1212,6 @@ It looks like it's the first time you run Shaarli. Please configure it:<br>
 
     <?php LinkPage::pagefooterTpl(); ?>
 
-<script>
-$(document).ready(function() {
-	$('a.qrcode').click(function(){
-	  hide_qrcode();
-	  var link = $(this).attr('href');
-	  $(this).after('<div class="qrcode" onclick="hide_qrcode();return false;"><img src="'+link+'" width="200" height="200"><br>click to close</div>');
-	});
-});
-function hide_qrcode() { $('div.qrcode').remove(); }
-</script>
 </body>
 </html><?php
  }
@@ -804,7 +1259,7 @@ function hide_qrcode() { $('div.qrcode').remove(); }
  extract(LinkPage::$var);
 ?>
 <div id="footer">
-    <b><a href="http://sebsauvage.net/wiki/doku.php?id=php:shaarli">Shaarli <?php echo htmlspecialchars( $version );?></a></b> - The personal, minimalist, super-fast, no-database delicious clone. By <a href="http://sebsauvage.net" target="_blank">sebsauvage.net</a>. Theme by <a href="http://blog.idleman.fr" target="_blank">idleman.fr</a>.
+    <b><a href="http://github.com/tontof/kriss_link">KrISS link <?php echo htmlspecialchars( $version );?></a></b> - A simple and smart (or stupid) <a href="http://sebsauvage.net/wiki/doku.php?id=php:shaarli">shaarli</a>. By <a href="http://tontof.net">Tontof</a>.
 </div>
 <?php if( $newversion ){ ?>
 
@@ -817,18 +1272,6 @@ function hide_qrcode() { $('div.qrcode').remove(); }
 <?php } ?>
 
 
-<?php if( $GLOBALS['config']['OPEN_SHAARLI'] || isLoggedIn() ){ ?>
-
-<script language="JavaScript">
-$(document).ready(function()
-{
-    $('#lf_tags').autocomplete({source:'<?php echo $source;?>?ws=tags',minLength:1});
-    $('#searchtags').autocomplete({source:'<?php echo $source;?>?ws=tags',minLength:1});
-    $('#fromtag').autocomplete({source:'<?php echo $source;?>?ws=singletag',minLength:1});
-});
-</script>
-<?php } ?>
-
 <?php
  }
 
@@ -837,8 +1280,6 @@ $(document).ready(function()
  extract(LinkPage::$var);
 ?>
 
-
-    <div id="logo" title="Share your links !" onclick="document.location='?';"></div>
     <div style="float:right; font-style:italic; color:#bbb; text-align:right; padding:0 5 0 0;" class="nomobile">Shaare your links...<br>
         <?php if( !empty($linkcount) ){ ?>
 <?php echo $linkcount;?> links<?php } ?></div>
@@ -882,7 +1323,6 @@ $(document).ready(function()
 <html>
 <head><?php LinkPage::includesTpl(); ?>
 
-<script src="inc/jquery.lazyload.min.js"></script>
 </head>
 <body>
 <div id="pageheader"><?php LinkPage::pageheaderTpl(); ?></div>
@@ -900,11 +1340,6 @@ $(document).ready(function()
 <?php LinkPage::pagefooterTpl(); ?>
 
 </body>
-<script>
-$(document).ready(function() {
-    $("img.lazyimage").show().lazyload();
-});
-</script>
 </html><?php
  }
 
@@ -991,13 +1426,13 @@ class pageBuilder
         elseif (!empty($_GET['searchterm'])) $searchcrits.='&searchterm='.urlencode($_GET['searchterm']);
         $this->assign('searchcrits',$searchcrits);
         $this->assign('source',indexUrl());
-        $this->assign('version',shaarli_version);
+        $this->assign('version',LINK_VERSION);
         $this->assign('scripturl',indexUrl());
-        $this->assign('pagetitle','Shaarli');
+        $this->assign('pagetitle','KrISS link');
         $this->assign('privateonly',!empty($_SESSION['privateonly'])); // Show only private links ?
         if (!empty($GLOBALS['title'])) $this->assign('pagetitle',$GLOBALS['title']);
         if (!empty($GLOBALS['pagetitle'])) $this->assign('pagetitle',$GLOBALS['pagetitle']);
-        $this->assign('shaarlititle',empty($GLOBALS['title']) ? 'Shaarli': $GLOBALS['title'] );
+        $this->assign('shaarlititle',empty($GLOBALS['title']) ? 'KrISS link': $GLOBALS['title'] );
         return;    
     }
     
@@ -1143,20 +1578,22 @@ function checkphpversion()
 //         other= the available version.
 function checkUpdate()
 {
-    if (!isLoggedIn()) return ''; // Do not check versions for visitors.
-
-    // Get latest version number at most once a day.
-    if (!is_file($GLOBALS['config']['UPDATECHECK_FILENAME']) || (filemtime($GLOBALS['config']['UPDATECHECK_FILENAME'])<time()-($GLOBALS['config']['UPDATECHECK_INTERVAL'])))
-    {
-        $version=shaarli_version;
-        list($httpstatus,$headers,$data) = getHTTP('http://sebsauvage.net/files/shaarli_version.txt',2);
-        if (strpos($httpstatus,'200 OK')!==false) $version=$data;
-        // If failed, nevermind. We don't want to bother the user with that.
-        file_put_contents($GLOBALS['config']['UPDATECHECK_FILENAME'],$version); // touch file date
+    if ($GLOBALS['config']['UPDATECHECK_ENABLE'] && isLoggedIn()) { // Do not check versions for visitors.
+        // Get latest version number at most once a day.
+        if (!is_file($GLOBALS['config']['UPDATECHECK_FILENAME']) || (filemtime($GLOBALS['config']['UPDATECHECK_FILENAME'])<time()-($GLOBALS['config']['UPDATECHECK_INTERVAL'])))
+        {
+            $version=LINK_VERSION;
+            list($httpstatus,$headers,$data) = getHTTP('http://sebsauvage.net/files/shaarli_version.txt',2);
+            if (strpos($httpstatus,'200 OK')!==false) $version=$data;
+            // If failed, nevermind. We don't want to bother the user with that.
+            file_put_contents($GLOBALS['config']['UPDATECHECK_FILENAME'],$version); // touch file date
+        }
+        // Compare versions:
+        $newestversion=file_get_contents($GLOBALS['config']['UPDATECHECK_FILENAME']);
+        if (version_compare($newestversion,LINK_VERSION)==1) return $newestversion;
+        return '';
     }
-    // Compare versions:
-    $newestversion=file_get_contents($GLOBALS['config']['UPDATECHECK_FILENAME']);
-    if (version_compare($newestversion,shaarli_version)==1) return $newestversion;
+
     return '';
 }
 
@@ -1243,7 +1680,7 @@ define('INACTIVITY_TIMEOUT',3600); // (in seconds). If the user does not access 
 ini_set('session.use_cookies', 1);       // Use cookies to store session.
 ini_set('session.use_only_cookies', 1);  // Force cookies for session (phpsessionID forbidden in URL)
 ini_set('session.use_trans_sid', false); // Prevent php to use sessionID in URL if cookies are disabled.
-session_name('shaarli');
+session_name('kriss');
 session_start();
 
 // Returns the IP address of the client (Used to prevent session cookie hijacking.)
@@ -1256,6 +1693,21 @@ function allIPs()
     return $ip;
 }
 
+function allInfo()
+{
+    $infos = $_SERVER["REMOTE_ADDR"];
+    if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $infos.=$_SERVER['HTTP_X_FORWARDED_FOR'];
+    }
+    if (isset($_SERVER['HTTP_CLIENT_IP'])) {
+        $infos.='_'.$_SERVER['HTTP_CLIENT_IP'];
+    }
+    $infos.='_'.$_SERVER['HTTP_USER_AGENT'];
+    $infos.='_'.$_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    
+    return sha1($infos);
+}
+
 // Check that user/password is correct.
 function check_auth($login,$password)
 {
@@ -1264,6 +1716,7 @@ function check_auth($login,$password)
     {   // Login/password is correct.
         $_SESSION['uid'] = sha1(uniqid('',true).'_'.mt_rand()); // generate unique random number (different than phpsessionid)
         $_SESSION['ip']=allIPs();                // We store IP address(es) of the client to make sure session is not hijacked.
+        $_SESSION['info']=allInfo();
         $_SESSION['username']=$login;
         $_SESSION['expires_on']=time()+INACTIVITY_TIMEOUT;  // Set session expiration.
         logm('Login successful');
@@ -1905,7 +2358,7 @@ function renderPage()
         // Get previous URL (http_referer) and add the tag to the searchtags parameters in query.
         if (empty($_SERVER['HTTP_REFERER'])) { header('Location: ?searchtags='.urlencode($_GET['addtag'])); exit; } // In case browser does not send HTTP_REFERER
         parse_str(parse_url($_SERVER['HTTP_REFERER'],PHP_URL_QUERY), $params);
-        $params['searchtags'] = (empty($params['searchtags']) ?  trim($_GET['addtag']) : trim($params['searchtags']).' '.trim($_GET['addtag']));
+        $params['searchtags'] = (empty($params['searchtags']) ?  trim($_GET['addtag']) : trim(stripslashes($params['searchtags'])).' '.trim($_GET['addtag']));
         unset($params['page']); // We also remove page (keeping the same page has no sense, since the results are different)
         header('Location: ?'.http_build_query($params));
         exit;
@@ -1919,7 +2372,7 @@ function renderPage()
         parse_str(parse_url($_SERVER['HTTP_REFERER'],PHP_URL_QUERY), $params);
         if (isset($params['searchtags']))
         {
-            $tags = explode(' ',$params['searchtags']);
+            $tags = explode(' ',stripslashes($params['searchtags']));
             $tags=array_diff($tags, array($_GET['removetag'])); // Remove value from array $tags.
             if (count($tags)==0) unset($params['searchtags']); else $params['searchtags'] = implode(' ',$tags);
             unset($params['page']); // We also remove page (keeping the same page has no sense, since the results are different)
@@ -2178,7 +2631,7 @@ function renderPage()
             $link_is_new = true;  // This is a new link
             $linkdate = strval(date('Ymd_His'));
             $title = (empty($_GET['title']) ? '' : $_GET['title'] ); // Get title if it was provided in URL (by the bookmarklet).
-            $description=''; $tags=''; $private=0;
+            $description= (empty($_GET['description']) ? '' : $_GET['description'] ); $tags=''; $private=0;
             if (($url!='') && parse_url($url,PHP_URL_SCHEME)=='') $url = 'http://'.$url;
             // If this is an HTTP link, we try go get the page to extact the title (otherwise we will to straight to the edit form.)
             if (empty($title) && parse_url($url,PHP_URL_SCHEME)=='http')
@@ -2412,9 +2865,6 @@ function buildLinkList($PAGE,$LINKSDB)
     */
     $keys=array(); foreach($linksToDisplay as $key=>$value) { $keys[]=$key; } // Stupid and ugly. Thanks php.
 
-    // If there is only a single link, we change on-the-fly the title of the page.
-    if (count($linksToDisplay)==1) $GLOBALS['pagetitle'] = $linksToDisplay[$keys[0]]['title'].' - '.$GLOBALS['title'];
-
     // Select articles according to paging.
     $pagecount = ceil(count($keys)/$_SESSION['LINKS_PER_PAGE']);
     $pagecount = ($pagecount==0 ? 1 : $pagecount);
@@ -2605,7 +3055,7 @@ function thumbnail($url,$href=false)
 
 
 // Returns the HTML code to display a thumbnail for a link
-// for the picture wall (using lazy image loading)
+// for the picture wall
 // Understands various services (youtube.com...)
 // Input: $url = url for which the thumbnail must be found.
 //        $href = if provided, this URL will be followed instead of $url
@@ -2617,21 +3067,12 @@ function lazyThumbnail($url,$href=false)
 
     $html='<a href="'.htmlspecialchars($t['href']).'">';
     
-    // Lazy image (only loaded by javascript when in the viewport).
-    $html.='<img class="lazyimage" src="#" data-original="'.htmlspecialchars($t['src']).'"';
+    $html.='<img src="'.htmlspecialchars($t['src']).'"';
     if (!empty($t['width']))  $html.=' width="'.htmlspecialchars($t['width']).'"';
     if (!empty($t['height'])) $html.=' height="'.htmlspecialchars($t['height']).'"';
     if (!empty($t['style']))  $html.=' style="'.htmlspecialchars($t['style']).'"';
     if (!empty($t['alt']))    $html.=' alt="'.htmlspecialchars($t['alt']).'"';
-    $html.='>';
-    
-    // No-javascript fallback:
-    $html.='<noscript><img src="'.htmlspecialchars($t['src']).'"';
-    if (!empty($t['width']))  $html.=' width="'.htmlspecialchars($t['width']).'"';
-    if (!empty($t['height'])) $html.=' height="'.htmlspecialchars($t['height']).'"';
-    if (!empty($t['style']))  $html.=' style="'.htmlspecialchars($t['style']).'"';
-    if (!empty($t['alt']))    $html.=' alt="'.htmlspecialchars($t['alt']).'"';
-    $html.='></noscript></a>';
+    $html.='></a>';
     
     return $html;
 }
@@ -2658,7 +3099,7 @@ function install()
         $GLOBALS['hash'] = sha1($_POST['setpassword'].$GLOBALS['login'].$GLOBALS['salt']);
         $GLOBALS['title'] = (empty($_POST['title']) ? 'Shared links on '.htmlspecialchars(indexUrl()) : $_POST['title'] );
         writeConfig();
-        echo '<script language="JavaScript">alert("Shaarli is now configured. Please enter your login/password and start shaaring your links !");document.location=\'?do=login\';</script>';
+        echo '<script language="JavaScript">alert("KrISS link is now configured. Please enter your login/password and start shaaring your links !");document.location=\'?do=login\';</script>';
         exit;
     }
 

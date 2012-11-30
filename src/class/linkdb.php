@@ -76,6 +76,8 @@ class linkdb implements Iterator, Countable, ArrayAccess
              $this->links[$link['linkdate']] = $link;
              $link = array('title'=>'My secret stuff... - Pastebin.com','url'=>'http://pastebin.com/smCEEeSn','description'=>'SShhhh!!  I\'m a private link only YOU can see. You can delete me too.','private'=>1,'linkdate'=>'20110914_074522','tags'=>'secretstuff');
              $this->links[$link['linkdate']] = $link;
+             $link = array('title'=>'KrISS link','url'=>'https://github.com/tontof/kriss_link','description'=>'Welcome to KrISS link, a simple and smart (or stupid) shaarli.','private'=>0,'linkdate'=>'20121130_190000','tags'=>'opensource software');
+             $this->links[$link['linkdate']] = $link;
              file_put_contents($GLOBALS['config']['DATASTORE'], PHPPREFIX.base64_encode(gzdeflate(serialize($this->links))).PHPSUFFIX); // Write database to disk
         }
     }

@@ -47,9 +47,9 @@
 <?php echo $value1["url"];?>"><?php echo htmlspecialchars( $value1["title"] );?></a></span>
                 <?php if( isLoggedIn() ){ ?>
 
-                    <form method="GET" class="buttoneditform"><input type="hidden" name="edit_link" value="<?php echo $value1["linkdate"];?>"><input type="image" alt="Edit" src="images/edit_icon.png" title="Edit" class="button_edit"></form>
+                    <form method="GET" class="buttoneditform"><input type="hidden" name="edit_link" value="<?php echo $value1["linkdate"];?>"><input type="submit" value="Edit" class="button_edit"></form>
                     <form method="POST" class="buttoneditform"><input type="hidden" name="lf_linkdate" value="<?php echo $value1["linkdate"];?>">
-                    <input type="hidden" name="token" value="<?php echo $token;?>"><input type="hidden" name="delete_link"><input type="image" alt="Delete" src="images/delete_icon.png" title="Delete" class="button_delete" onClick="return confirmDeleteLink();"></form>
+                    <input type="hidden" name="token" value="<?php echo $token;?>"><input type="hidden" name="delete_link"><input type="submit" value="Delete" class="button_delete" onClick="return confirmDeleteLink();"></form>
                 <?php } ?>
 
                 <br>
@@ -63,7 +63,7 @@
                     <span class="linkdate" title="Short link here"><a href="?<?php echo smallHash( $value1["linkdate"] );?>">permalink</a> - </span>
                 <?php } ?>
 
-                <div style="position:relative;display:inline;"><a href="http://invx.com/code/qrcode/?code=<?php echo urlencode( $scripturl );?>%3F<?php echo smallHash( $value1["linkdate"] );?>&width=200&height=200" onclick="return false;" class="qrcode"><img src="images/qrcode.png" width="13" height="13" title="QR-Code"></a></div> - 
+                <div style="position:relative;display:inline;"><a href="http://invx.com/code/qrcode/?code=<?php echo urlencode( $scripturl );?>%3F<?php echo smallHash( $value1["linkdate"] );?>&width=200&height=200" class="qrcode" title="QR-Code">qrcode</a></div> - 
                 <span class="linkurl" title="Short link"><?php echo htmlspecialchars( $value1["url"] );?></span><br>
                 <?php if( $value1["tags"] ){ ?>
 
@@ -86,15 +86,5 @@
 
     <?php LinkPage::pagefooterTpl(); ?>
 
-<script>
-$(document).ready(function() {
-	$('a.qrcode').click(function(){
-	  hide_qrcode();
-	  var link = $(this).attr('href');
-	  $(this).after('<div class="qrcode" onclick="hide_qrcode();return false;"><img src="'+link+'" width="200" height="200"><br>click to close</div>');
-	});
-});
-function hide_qrcode() { $('div.qrcode').remove(); }
-</script>
 </body>
 </html>

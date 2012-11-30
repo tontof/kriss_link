@@ -1,6 +1,4 @@
 
-
-    <div id="logo" title="Share your links !" onclick="document.location='?';"></div>
     <div style="float:right; font-style:italic; color:#bbb; text-align:right; padding:0 5 0 0;" class="nomobile">Shaare your links...<br>
         <?php if( !empty($linkcount) ){ ?>
 <?php echo $linkcount;?> links<?php } ?></div>

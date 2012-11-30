@@ -1,5 +1,8 @@
 <?php
-// Shaarli 0.0.40 beta - Shaare your links...
+// KrISS link. A simple and smart (or stupid) shaarli - by Tontof - http://tontof.net
+// use KrISS link at your own risk
+
+// based on Shaarli 0.0.40 beta - Shaare your links...
 // The personal, minimalist, super-fast, no-database delicious clone. By sebsauvage.net
 // http://sebsauvage.net/wiki/doku.php?id=php:shaarli
 // Licence: http://www.opensource.org/licenses/zlib-license.php
@@ -20,6 +23,7 @@ $GLOBALS['config']['CACHEDIR'] = 'cache'; // Cache directory for thumbnails for 
 $GLOBALS['config']['PAGECACHE'] = 'pagecache'; // Page cache directory.
 $GLOBALS['config']['ENABLE_LOCALCACHE'] = true; // Enable Shaarli to store thumbnail in a local cache. Disable to reduce webspace usage.
 $GLOBALS['config']['PUBSUBHUB_URL'] = ''; // PubSubHubbub support. Put an empty string to disable, or put your hub url here to enable.
+$GLOBALS['config']['UPDATECHECK_ENABLE'] = false ; // If true, check for new version
 $GLOBALS['config']['UPDATECHECK_FILENAME'] = $GLOBALS['config']['DATADIR'].'/lastupdatecheck.txt'; // For updates check of Shaarli.
 $GLOBALS['config']['UPDATECHECK_INTERVAL'] = 86400 ; // Updates check frequency for Shaarli. 86400 seconds=24 hours
                                           // Note: You must have publisher.php in the same directory as Shaarli index.php
@@ -28,7 +32,7 @@ $GLOBALS['config']['UPDATECHECK_INTERVAL'] = 86400 ; // Updates check frequency 
 // Optionnal config file.
 if (is_file($GLOBALS['config']['DATADIR'].'/options.php')) require($GLOBALS['config']['DATADIR'].'/options.php');
 
-define('shaarli_version','0.0.40 beta');
+define('LINK_VERSION','1');
 define('PHPPREFIX','<?php /* '); // Prefix to encapsulate data in php code.
 define('PHPSUFFIX',' */ ?>'); // Suffix to encapsulate data in php code.
 
@@ -113,20 +117,22 @@ function checkphpversion()
 //         other= the available version.
 function checkUpdate()
 {
-    if (!isLoggedIn()) return ''; // Do not check versions for visitors.
-
-    // Get latest version number at most once a day.
-    if (!is_file($GLOBALS['config']['UPDATECHECK_FILENAME']) || (filemtime($GLOBALS['config']['UPDATECHECK_FILENAME'])<time()-($GLOBALS['config']['UPDATECHECK_INTERVAL'])))
-    {
-        $version=shaarli_version;
-        list($httpstatus,$headers,$data) = getHTTP('http://sebsauvage.net/files/shaarli_version.txt',2);
-        if (strpos($httpstatus,'200 OK')!==false) $version=$data;
-        // If failed, nevermind. We don't want to bother the user with that.
-        file_put_contents($GLOBALS['config']['UPDATECHECK_FILENAME'],$version); // touch file date
+    if ($GLOBALS['config']['UPDATECHECK_ENABLE'] && isLoggedIn()) { // Do not check versions for visitors.
+        // Get latest version number at most once a day.
+        if (!is_file($GLOBALS['config']['UPDATECHECK_FILENAME']) || (filemtime($GLOBALS['config']['UPDATECHECK_FILENAME'])<time()-($GLOBALS['config']['UPDATECHECK_INTERVAL'])))
+        {
+            $version=LINK_VERSION;
+            list($httpstatus,$headers,$data) = getHTTP('http://sebsauvage.net/files/shaarli_version.txt',2);
+            if (strpos($httpstatus,'200 OK')!==false) $version=$data;
+            // If failed, nevermind. We don't want to bother the user with that.
+            file_put_contents($GLOBALS['config']['UPDATECHECK_FILENAME'],$version); // touch file date
+        }
+        // Compare versions:
+        $newestversion=file_get_contents($GLOBALS['config']['UPDATECHECK_FILENAME']);
+        if (version_compare($newestversion,LINK_VERSION)==1) return $newestversion;
+        return '';
     }
-    // Compare versions:
-    $newestversion=file_get_contents($GLOBALS['config']['UPDATECHECK_FILENAME']);
-    if (version_compare($newestversion,shaarli_version)==1) return $newestversion;
+
     return '';
 }
 
@@ -213,7 +219,7 @@ define('INACTIVITY_TIMEOUT',3600); // (in seconds). If the user does not access 
 ini_set('session.use_cookies', 1);       // Use cookies to store session.
 ini_set('session.use_only_cookies', 1);  // Force cookies for session (phpsessionID forbidden in URL)
 ini_set('session.use_trans_sid', false); // Prevent php to use sessionID in URL if cookies are disabled.
-session_name('shaarli');
+session_name('kriss');
 session_start();
 
 // Returns the IP address of the client (Used to prevent session cookie hijacking.)
@@ -226,6 +232,21 @@ function allIPs()
     return $ip;
 }
 
+function allInfo()
+{
+    $infos = $_SERVER["REMOTE_ADDR"];
+    if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $infos.=$_SERVER['HTTP_X_FORWARDED_FOR'];
+    }
+    if (isset($_SERVER['HTTP_CLIENT_IP'])) {
+        $infos.='_'.$_SERVER['HTTP_CLIENT_IP'];
+    }
+    $infos.='_'.$_SERVER['HTTP_USER_AGENT'];
+    $infos.='_'.$_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    
+    return sha1($infos);
+}
+
 // Check that user/password is correct.
 function check_auth($login,$password)
 {
@@ -234,6 +255,7 @@ function check_auth($login,$password)
     {   // Login/password is correct.
         $_SESSION['uid'] = sha1(uniqid('',true).'_'.mt_rand()); // generate unique random number (different than phpsessionid)
         $_SESSION['ip']=allIPs();                // We store IP address(es) of the client to make sure session is not hijacked.
+        $_SESSION['info']=allInfo();
         $_SESSION['username']=$login;
         $_SESSION['expires_on']=time()+INACTIVITY_TIMEOUT;  // Set session expiration.
         logm('Login successful');
@@ -875,7 +897,7 @@ function renderPage()
         // Get previous URL (http_referer) and add the tag to the searchtags parameters in query.
         if (empty($_SERVER['HTTP_REFERER'])) { header('Location: ?searchtags='.urlencode($_GET['addtag'])); exit; } // In case browser does not send HTTP_REFERER
         parse_str(parse_url($_SERVER['HTTP_REFERER'],PHP_URL_QUERY), $params);
-        $params['searchtags'] = (empty($params['searchtags']) ?  trim($_GET['addtag']) : trim($params['searchtags']).' '.trim($_GET['addtag']));
+        $params['searchtags'] = (empty($params['searchtags']) ?  trim($_GET['addtag']) : trim(stripslashes($params['searchtags'])).' '.trim($_GET['addtag']));
         unset($params['page']); // We also remove page (keeping the same page has no sense, since the results are different)
         header('Location: ?'.http_build_query($params));
         exit;
@@ -889,7 +911,7 @@ function renderPage()
         parse_str(parse_url($_SERVER['HTTP_REFERER'],PHP_URL_QUERY), $params);
         if (isset($params['searchtags']))
         {
-            $tags = explode(' ',$params['searchtags']);
+            $tags = explode(' ',stripslashes($params['searchtags']));
             $tags=array_diff($tags, array($_GET['removetag'])); // Remove value from array $tags.
             if (count($tags)==0) unset($params['searchtags']); else $params['searchtags'] = implode(' ',$tags);
             unset($params['page']); // We also remove page (keeping the same page has no sense, since the results are different)
@@ -1148,7 +1170,7 @@ function renderPage()
             $link_is_new = true;  // This is a new link
             $linkdate = strval(date('Ymd_His'));
             $title = (empty($_GET['title']) ? '' : $_GET['title'] ); // Get title if it was provided in URL (by the bookmarklet).
-            $description=''; $tags=''; $private=0;
+            $description= (empty($_GET['description']) ? '' : $_GET['description'] ); $tags=''; $private=0;
             if (($url!='') && parse_url($url,PHP_URL_SCHEME)=='') $url = 'http://'.$url;
             // If this is an HTTP link, we try go get the page to extact the title (otherwise we will to straight to the edit form.)
             if (empty($title) && parse_url($url,PHP_URL_SCHEME)=='http')
@@ -1382,9 +1404,6 @@ function buildLinkList($PAGE,$LINKSDB)
     */
     $keys=array(); foreach($linksToDisplay as $key=>$value) { $keys[]=$key; } // Stupid and ugly. Thanks php.
 
-    // If there is only a single link, we change on-the-fly the title of the page.
-    if (count($linksToDisplay)==1) $GLOBALS['pagetitle'] = $linksToDisplay[$keys[0]]['title'].' - '.$GLOBALS['title'];
-
     // Select articles according to paging.
     $pagecount = ceil(count($keys)/$_SESSION['LINKS_PER_PAGE']);
     $pagecount = ($pagecount==0 ? 1 : $pagecount);
@@ -1575,7 +1594,7 @@ function thumbnail($url,$href=false)
 
 
 // Returns the HTML code to display a thumbnail for a link
-// for the picture wall (using lazy image loading)
+// for the picture wall
 // Understands various services (youtube.com...)
 // Input: $url = url for which the thumbnail must be found.
 //        $href = if provided, this URL will be followed instead of $url
@@ -1587,21 +1606,12 @@ function lazyThumbnail($url,$href=false)
 
     $html='<a href="'.htmlspecialchars($t['href']).'">';
     
-    // Lazy image (only loaded by javascript when in the viewport).
-    $html.='<img class="lazyimage" src="#" data-original="'.htmlspecialchars($t['src']).'"';
+    $html.='<img src="'.htmlspecialchars($t['src']).'"';
     if (!empty($t['width']))  $html.=' width="'.htmlspecialchars($t['width']).'"';
     if (!empty($t['height'])) $html.=' height="'.htmlspecialchars($t['height']).'"';
     if (!empty($t['style']))  $html.=' style="'.htmlspecialchars($t['style']).'"';
     if (!empty($t['alt']))    $html.=' alt="'.htmlspecialchars($t['alt']).'"';
-    $html.='>';
-    
-    // No-javascript fallback:
-    $html.='<noscript><img src="'.htmlspecialchars($t['src']).'"';
-    if (!empty($t['width']))  $html.=' width="'.htmlspecialchars($t['width']).'"';
-    if (!empty($t['height'])) $html.=' height="'.htmlspecialchars($t['height']).'"';
-    if (!empty($t['style']))  $html.=' style="'.htmlspecialchars($t['style']).'"';
-    if (!empty($t['alt']))    $html.=' alt="'.htmlspecialchars($t['alt']).'"';
-    $html.='></noscript></a>';
+    $html.='></a>';
     
     return $html;
 }
@@ -1628,7 +1638,7 @@ function install()
         $GLOBALS['hash'] = sha1($_POST['setpassword'].$GLOBALS['login'].$GLOBALS['salt']);
         $GLOBALS['title'] = (empty($_POST['title']) ? 'Shared links on '.htmlspecialchars(indexUrl()) : $_POST['title'] );
         writeConfig();
-        echo '<script language="JavaScript">alert("Shaarli is now configured. Please enter your login/password and start shaaring your links !");document.location=\'?do=login\';</script>';
+        echo '<script language="JavaScript">alert("KrISS link is now configured. Please enter your login/password and start shaaring your links !");document.location=\'?do=login\';</script>';
         exit;
     }
 
